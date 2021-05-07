@@ -1,0 +1,6 @@
+save-commands.json
+
+# Rogue builder files made by v
+*.exe
+*.c
+*.def
