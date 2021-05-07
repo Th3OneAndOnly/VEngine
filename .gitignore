@@ -4,3 +4,5 @@ save-commands.json
 *.exe
 *.c
 *.def
+*.ilk
+*.pdb

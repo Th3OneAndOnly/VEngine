@@ -22,7 +22,7 @@ struct App {
 mut: // Simple container, no smartness here.
 	gg      &gg.Context
 	fm      chan int
-	ch      chan Command
+	ch      chan &Command
 	counter int
 	objects []GameObject
 }
@@ -36,7 +36,7 @@ fn log(msg string) {
 [console]
 fn main() {
 	log('program start')
-	draw := chan Command{cap: 1000} // The channel we send drawing commands to.
+	draw := chan &Command{cap: 1000} // The channel we send drawing commands to.
 	frames := chan int{} // The channel we update the render frame counter.
 	// Our app to pass around. I believe the gg.Context takes a reference, which is why we prefixed it with an &.
 	mut app := &App{
@@ -54,7 +54,7 @@ fn main() {
 		user_data: app
 	) // Creat our gg.
 	app.objects << Circle{
-		position: Vector2{300, 400}
+		position: Vector2{300, 100}
 		radius: 100
 		color: gx.red
 	}

@@ -3,10 +3,11 @@ import gg
 import gx
 
 interface GameObject {
-	queue_draw(ratio f32) Command
+	queue_draw(ratio f32) &Command
 	update(delta i64)
 }
 
+[heap]
 struct DrawCircle {
 	position Vector2
 	radius   int
@@ -26,8 +27,8 @@ mut:
 	velocity Vector2 = Vector2{0, 0}
 }
 
-fn (c Circle) queue_draw(ratio f32) Command {
-	return DrawCircle{
+fn (c Circle) queue_draw(ratio f32) &Command {
+	return &DrawCircle{
 		position: (c.position - c.velocity) + (c.velocity * vec2(ratio))
 		radius: c.radius
 		color: c.color
