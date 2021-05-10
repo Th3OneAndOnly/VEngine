@@ -1,3 +1,4 @@
+// Misc structures in common use.
 struct Vector2 {
 mut:
 	x f32
