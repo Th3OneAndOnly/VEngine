@@ -1,7 +1,5 @@
 // V Code for handling GameObjects and the code representation of what's on screen.
 import gg
-import gx
-import math.util as mathu
 
 interface Command {
 	draw(mut ctx gg.Context)

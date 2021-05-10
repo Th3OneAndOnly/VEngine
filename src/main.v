@@ -48,7 +48,21 @@ fn main() {
 		user_data: app
 	)
 
-	init(mut app)
+	// App init. Has to happen here? If I put it in a function, C errors.
+
+	app.objects << Polygon{
+		position: Vector2{200, 100}
+		points: [
+			Vector2{0, 0},
+			Vector2{60, 100},
+			Vector2{60, 120},
+			Vector2{40, 120},
+			Vector2{20, 40},
+		]
+		color: gx.green
+	}
+
+	// End of app init
 
 	go app.loop()
 
@@ -67,9 +81,6 @@ fn (mut a App) update(delta i64) {
 		object.update(delta)
 		log('update object $object')
 	}
-}
-
-fn init(mut app App) {
 }
 
 // Simple game loop. I've done, like, 3 of these in my time. Same as any other time I've done it (mostly) and works just as well.
