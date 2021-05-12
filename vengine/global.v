@@ -6,15 +6,14 @@ import time
 
 const (
 	// Max amount of time in milliseconds we should wait for commands to draw. Also how often we render. Should be low for smoothness, high to prevent hanging and tearing.
-	max_frame_wait_time = 50
-
+	// max_frame_wait_time = 50 // DEPRECATED because arrays now
 	// Milliseconds per update call. Doesn't exactly mean the update function is called this often, but it is called AT MOST this often, multiple times before rendering. Should obviously be larger than max_frame_wait_time
-	ms_per_update       = 60
+	ms_per_update = 60
 )
 
 [heap]
 struct App {
-mut: // Simple container, no smartness here.
+mut:
 	gg        &gg.Context = 0
 	cmds      []Command
 	counter   int
@@ -25,14 +24,13 @@ mut: // Simple container, no smartness here.
 pub fn (mut a App) add_object(mut obj GameObject) {
 	obj.app = &a
 	a.objects << obj
-	assert a.objects[a.objects.len - 1] == obj
 }
 
 pub fn (a &App) get_mouse_pos() Vector2 {
 	return a.mouse_pos
 }
 
-[if debug]
+[console; if debug]
 fn log(msg string) {
 	println('[VENGINE DEBUG]: $msg')
 }
@@ -68,14 +66,13 @@ pub fn (mut app App) begin() {
 	// 		dump(app.mouse_pos)
 	// 	}
 	// }(mut app)
-
 	app.gg.run()
 }
 
 fn (mut a App) render(ratio f32) {
 	a.cmds = []
 	for mut object in a.objects {
-		println('We render object')
+		log('We render object')
 		$if debug {
 			result := dump(object.queue_draw(ratio))
 			// log('draw object $result')
@@ -88,7 +85,7 @@ fn (mut a App) render(ratio f32) {
 
 fn (mut a App) update(delta i64) {
 	for mut object in a.objects {
-		println('update')
+		log('update')
 		object.update(delta)
 	}
 }
@@ -133,6 +130,7 @@ fn frame(mut app App) {
 	}
 
 	app.cmds = []
+
 	// for { // Keep looping through the channel until no more commands exist.
 	// 	select {
 	// 		cmd := <-app.ch {
