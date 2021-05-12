@@ -1,10 +1,11 @@
-// Smaller utility objects mainly used for things like before-art creation and debug hitbox rendering.
+module vengine
+
 import gx
 import gg
 import math.util as mathu
 
 [heap]
-struct DrawCircle {
+pub struct DrawCircle {
 	position Vector2
 	radius   int
 	color    gx.Color
@@ -12,7 +13,7 @@ struct DrawCircle {
 }
 
 [heap]
-struct DrawRectangle {
+pub struct DrawRectangle {
 	position Vector2
 	width    int
 	height   int
@@ -20,7 +21,7 @@ struct DrawRectangle {
 }
 
 [heap]
-struct DrawPolygon {
+pub struct DrawPolygon {
 	points []f32
 	color  gx.Color
 }
@@ -37,30 +38,33 @@ fn (d DrawPolygon) draw(mut ctx gg.Context) {
 	ctx.draw_convex_poly(d.points, d.color)
 }
 
-struct Circle {
+pub struct Circle {
 mut:
+	app      &App = 0
 	position Vector2
 	radius   int
 	color    gx.Color
 }
 
-struct Rectangle {
+pub struct Rectangle {
 mut:
+	app      &App = 0
 	position Vector2
 	width    int
 	height   int
 	color    gx.Color
 }
 
-struct Polygon {
+pub struct Polygon {
 	relative bool = true
 mut:
+	app      &App = 0
 	position Vector2
 	points   []Vector2
 	color    gx.Color
 }
 
-fn (o Circle) queue_draw(ratio f32) &Command {
+pub fn (o Circle) queue_draw(ratio f32) &Command {
 	return &DrawCircle{
 		position: o.position
 		radius: o.radius
@@ -74,7 +78,7 @@ fn (o Circle) queue_draw(ratio f32) &Command {
 fn (mut o Circle) update(delta i64) {
 }
 
-fn (o Rectangle) queue_draw(ratio f32) &Command {
+pub fn (o Rectangle) queue_draw(ratio f32) &Command {
 	return &DrawRectangle{
 		position: o.position
 		width: o.width
@@ -86,7 +90,7 @@ fn (o Rectangle) queue_draw(ratio f32) &Command {
 fn (mut o Rectangle) update(delta i64) {
 }
 
-fn (o Polygon) queue_draw(ratio f32) &Command {
+pub fn (o Polygon) queue_draw(ratio f32) &Command {
 	mut points := []f32{cap: 2 * o.points.len}
 	offset := if o.relative { o.position } else { Vector2{0, 0} }
 	for vec in o.points {

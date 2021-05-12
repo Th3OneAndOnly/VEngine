@@ -1,4 +1,5 @@
-// Our entrypoint into the program.
+module vengine
+
 import gg
 import gx
 import time
@@ -9,28 +10,42 @@ const (
 
 	// Milliseconds per update call. Doesn't exactly mean the update function is called this often, but it is called AT MOST this often, multiple times before rendering. Should obviously be larger than max_frame_wait_time
 	ms_per_update       = 60
-
-	// Rate we sleep. According to this number of cycles we sleep a small bit to alleivate the thread and the CPU. We also sleep when we are running really fast to allow for chances to update.
-	sleep_rate          = 40
 )
 
+[heap]
 struct App {
 mut: // Simple container, no smartness here.
-	gg      &gg.Context
-	fm      chan int
-	ch      chan &Command
-	counter int
-	objects []GameObject
+	gg        &gg.Context
+	fm        chan int
+	ch        chan &Command
+	counter   int
+	mouse_pos Vector2
+	objects   []GameObject
+}
+
+pub fn (mut a App) add_object(mut obj GameObject) {
+	obj.app = &a
+	a.objects << obj
+}
+
+pub fn (a &App) get_mouse_pos() Vector2 {
+	return a.mouse_pos
 }
 
 [if debug]
 fn log(msg string) {
-	println('DEBUG: $msg')
+	println('[VENGINE DEBUG]: $msg')
 }
 
-// The entry point of our operations. A small note for windows users: if you want stuff to print out while using gg, attach [console] to the top of your main!
-[console]
-fn main() {
+pub struct AppConfig {
+	width     int
+	height    int
+	title     string
+	bg_color  gx.Color = gx.rgb(120, 120, 120)
+	font_size int      = 32
+}
+
+pub fn create_app(cfg AppConfig) &App {
 	draw := chan &Command{cap: 1000} // The channel we send drawing commands to.
 	frames := chan int{} // The channel we update the render frame counter.
 	mut app := &App{
@@ -39,47 +54,45 @@ fn main() {
 		ch: draw
 	}
 	app.gg = gg.new_context(
-		width: 600
-		height: 400
-		font_size: 32
-		window_title: 'Test Engine'
-		bg_color: gx.rgb(120, 120, 120)
+		width: cfg.width
+		height: cfg.height
+		font_size: cfg.font_size
+		window_title: cfg.title
+		bg_color: cfg.bg_color
 		frame_fn: frame
+		event_fn: event
 		user_data: app
 	)
+	return app
+}
 
-	// App init. Has to happen here? If I put it in a function, C errors.
-
-	app.objects << Polygon{
-		position: Vector2{200, 100}
-		points: [
-			Vector2{0, 0},
-			Vector2{60, 100},
-			Vector2{60, 120},
-			Vector2{40, 120},
-			Vector2{20, 40},
-		]
-		color: gx.green
-	}
-
-	// End of app init
-
+pub fn (mut app App) begin() {
 	go app.loop()
+
+	// go fn (mut app App) {
+	// 	for {
+	// 		dump(app.mouse_pos)
+	// 	}
+	// }(mut app)
 
 	app.gg.run()
 }
 
 fn (mut a App) render(ratio f32) {
 	for mut object in a.objects {
-		a.ch <- object.queue_draw(ratio)
-		log('render object $object')
+		$if debug {
+			result := object.queue_draw(ratio)
+			log('draw object $result')
+			a.ch <- result
+		} $else {
+			a.ch <- object.queue_draw(ratio)
+		}
 	}
 }
 
 fn (mut a App) update(delta i64) {
 	for mut object in a.objects {
 		object.update(delta)
-		log('update object $object')
 	}
 }
 
@@ -89,21 +102,30 @@ fn (mut a App) loop() {
 	mut elapsed := i64(0)
 	mut lag := i64(0)
 	for {
-		log('elapsed : $elapsed')
 		start = time.ticks()
 		lag += elapsed
 
-		for lag >= ms_per_update {
+		for lag >= vengine.ms_per_update {
 			a.update(elapsed)
-			lag -= ms_per_update
-		}
-		// If we are rendering REALLY fast this means that our either our update or render functions are running really fast. This is common in early development and it causes bad problems down the road, since we'll never actually update again and since we don't update we loop too fast and it's a viscious cycle. This will break it.
-		if elapsed < 5 {
-			time.sleep(ms_per_update * time.millisecond)
+			lag -= vengine.ms_per_update
 		}
 
-		a.render(f32(lag / ms_per_update))
+		// If we are rendering REALLY fast this means that our either our update or render functions are running really fast. This is common in early development and it causes bad problems down the road, since we'll never actually update again and since we don't update we loop too fast and it's a viscious cycle. This will break it.
+		if elapsed < 5 {
+			time.sleep(vengine.ms_per_update * time.millisecond)
+		}
+
+		a.render(f32(lag / vengine.ms_per_update))
 		elapsed = time.ticks() - start
+	}
+}
+
+fn event(e &gg.Event, mut app App) {
+	match e.typ {
+		.mouse_move {
+			app.mouse_pos = Vector2{e.mouse_x, e.mouse_y}
+		}
+		else {}
 	}
 }
 
@@ -114,7 +136,7 @@ fn frame(mut app App) {
 			cmd := <-app.ch {
 				cmd.draw(mut app.gg)
 			}
-			> max_frame_wait_time * time.millisecond {
+			> vengine.max_frame_wait_time * time.millisecond {
 				break
 			}
 		}
