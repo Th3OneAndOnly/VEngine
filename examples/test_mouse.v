@@ -12,11 +12,12 @@ mut:
 	color    gx.Color
 }
 
-fn (o &CircleFollowMouse) queue_draw(ratio f32) &ve.Command {
+fn (o &CircleFollowMouse) queue_draw(ratio f32) ve.Command {
 	assert o.position == ve.Vector2{0, 0}
 	assert o.radius == 20
 	assert o.color == gx.blue
-	return &ve.DrawCircle{ // TODO: Get rid of this code-repitition
+	println('Queued Draw! And passed assertions')
+	return ve.DrawCircle{ // TODO: Get rid of this code-repitition
 		position: o.position
 		radius: o.radius
 		color: o.color
@@ -27,11 +28,17 @@ fn (o &CircleFollowMouse) queue_draw(ratio f32) &ve.Command {
 fn (mut o CircleFollowMouse) update(delta i64) {
 	// o.position = o.app.get_mouse_pos()
 	// dump(o.position)
+
 	// dump(o.app.get_mouse_pos())
+	println('Working')
+	assert o.position == ve.Vector2{0, 0}
+	assert o.radius == 20
+	assert o.color == gx.blue
 }
 
 [console]
 fn main() {
+	println('Working')
 	ratio := ve.Vector2{4, 3}
 	scale := 120
 	mut app := ve.create_app(
@@ -39,7 +46,7 @@ fn main() {
 		height: int(scale * ratio.y)
 		title: 'Mouse App'
 	)
-	app.add_object(mut CircleFollowMouse{
+	app.add_object(mut ve.Circle{
 		position: ve.Vector2{0, 0}
 		radius: 20
 		color: gx.blue
