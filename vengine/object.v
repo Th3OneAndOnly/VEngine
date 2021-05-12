@@ -11,5 +11,11 @@ mut:
 	app &App
 	position Vector2
 	update(delta i64)
-	queue_draw(ratio f32) &Command
+	queue_draw(ratio f32) Command
+}
+
+[heap]
+struct GameObjectRef {
+mut:
+	ref GameObject
 }

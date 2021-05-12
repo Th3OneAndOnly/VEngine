@@ -15,9 +15,9 @@ const (
 [heap]
 struct App {
 mut: // Simple container, no smartness here.
-	gg        &gg.Context
+	gg        &gg.Context = 0
 	fm        chan int
-	ch        chan &Command
+	cmds      []Command
 	counter   int
 	mouse_pos Vector2
 	objects   []GameObject
@@ -46,12 +46,9 @@ pub struct AppConfig {
 }
 
 pub fn create_app(cfg AppConfig) &App {
-	draw := chan &Command{cap: 1000} // The channel we send drawing commands to.
 	frames := chan int{} // The channel we update the render frame counter.
 	mut app := &App{
-		gg: 0
 		fm: frames
-		ch: draw
 	}
 	app.gg = gg.new_context(
 		width: cfg.width
@@ -79,19 +76,22 @@ pub fn (mut app App) begin() {
 }
 
 fn (mut a App) render(ratio f32) {
+	a.cmds = []
 	for mut object in a.objects {
+		println('We render object')
 		$if debug {
-			result := object.queue_draw(ratio)
-			log('draw object $result')
-			a.ch <- result
+			result := dump(object.queue_draw(ratio))
+			// log('draw object $result')
+			a.cmds << result
 		} $else {
-			a.ch <- object.queue_draw(ratio)
+			a.cmds << object.queue_draw(ratio)
 		}
 	}
 }
 
 fn (mut a App) update(delta i64) {
 	for mut object in a.objects {
+		println('update')
 		object.update(delta)
 	}
 }
@@ -131,16 +131,21 @@ fn event(e &gg.Event, mut app App) {
 
 fn frame(mut app App) {
 	app.gg.begin()
-	for { // Keep looping through the channel until no more commands exist.
-		select {
-			cmd := <-app.ch {
-				cmd.draw(mut app.gg)
-			}
-			> vengine.max_frame_wait_time * time.millisecond {
-				break
-			}
-		}
+	for cmd in app.cmds {
+		cmd.draw(mut app.gg)
 	}
+
+	app.cmds = []
+	// for { // Keep looping through the channel until no more commands exist.
+	// 	select {
+	// 		cmd := <-app.ch {
+	// 			cmd.draw(mut app.gg)
+	// 		}
+	// 		> vengine.max_frame_wait_time * time.millisecond {
+	// 			break
+	// 		}
+	// 	}
+	// }
 
 	// To let everyone else know we finished drawing a new frame. This happens no matter whether ~~anyone is consuming them~~yeah turns out channels need somebody on the other end -- who knew?
 	app.fm.try_push(app.counter) // If it fails I don't care. It's just gonna miss a single frame.
