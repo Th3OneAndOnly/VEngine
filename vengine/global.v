@@ -5,10 +5,10 @@ import gx
 import time
 
 const (
-	// Max amount of time in milliseconds we should wait for commands to draw. Also how often we render. Should be low for smoothness, high to prevent hanging and tearing.
-	// max_frame_wait_time = 50 // DEPRECATED because arrays now
 	// Milliseconds per update call. Doesn't exactly mean the update function is called this often, but it is called AT MOST this often, multiple times before rendering. Should obviously be larger than max_frame_wait_time
 	ms_per_update = 60
+	// Debug. 'all' is used for everything, so if debug is on it will always run. Anything else is complier flags. This is so that when I/someone is working on AI or smth I don't need to see the gameloop debug messages.
+	debug_tags    = init_list()
 )
 
 [heap]
@@ -21,26 +21,26 @@ mut:
 	objects   []GameObject
 }
 
-pub fn (mut a App) add_object(mut obj GameObject) {
-	obj.app = &a
-	a.objects << *obj // Thanks SO MUCH miccah. Can't believe it was this simple.
-}
-
-pub fn (a &App) get_mouse_pos() Vector2 {
-	return a.mouse_pos
-}
-
-[console; if debug]
-fn log(msg string) {
-	println('[VENGINE DEBUG]: $msg')
-}
-
 pub struct AppConfig {
 	width     int
 	height    int
 	title     string
 	bg_color  gx.Color = gx.rgb(120, 120, 120)
 	font_size int      = 32
+}
+
+pub fn (a &App) get_mouse_pos() Vector2 {
+	return a.mouse_pos
+}
+
+pub fn (mut a App) add_object(mut obj GameObject) {
+	obj.app = &a
+	a.objects << *obj // Thanks SO MUCH miccah. Can't believe it was this simple.
+}
+
+pub fn (mut app App) begin() {
+	go app.loop()
+	app.gg.run()
 }
 
 pub fn create_app(cfg AppConfig) &App {
@@ -58,23 +58,13 @@ pub fn create_app(cfg AppConfig) &App {
 	return app
 }
 
-pub fn (mut app App) begin() {
-	go app.loop()
-
-	// go fn (mut app App) {
-	// 	for {
-	// 		dump(app.mouse_pos)
-	// 	}
-	// }(mut app)
-	app.gg.run()
-}
-
 fn (mut a App) render(ratio f32) {
+	log('begin render: $ratio', 'gameloop')
 	a.cmds = []
 	for mut object in a.objects {
 		$if debug {
 			result := object.queue_draw(ratio)
-			log('draw object $result')
+			log('draw object $result', 'gameloop')
 			a.cmds << *result
 		} $else {
 			a.cmds << *object.queue_draw(ratio)
@@ -123,21 +113,29 @@ fn event(e &gg.Event, mut app App) {
 
 fn frame(mut app App) {
 	app.gg.begin()
+
 	for cmd in app.cmds {
 		cmd.draw(mut app.gg)
 	}
 
-	app.cmds = []
-
-	// for { // Keep looping through the channel until no more commands exist.
-	// 	select {
-	// 		cmd := <-app.ch {
-	// 			cmd.draw(mut app.gg)
-	// 		}
-	// 		> vengine.max_frame_wait_time * time.millisecond {
-	// 			break
-	// 		}
-	// 	}
-	// }
 	app.gg.end()
+}
+
+[console; if debug]
+fn log(msg string, tag string) {
+	if tag in vengine.debug_tags {
+		println('[VENGINE DEBUG]: $msg')
+	}
+}
+
+fn init_list() []string {
+	$if debug {
+		mut list := ['all']
+		$if gameloop ? {
+			list << 'gameloop'
+		}
+		return list
+	} $else {
+		return []string{}
+	}
 }

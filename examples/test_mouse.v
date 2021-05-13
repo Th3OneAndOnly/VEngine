@@ -13,28 +13,21 @@ mut:
 }
 
 fn (o &CircleFollowMouse) queue_draw(ratio f32) &ve.Command {
-	dump(o.position)
 	item := &ve.DrawCircle{ // TODO: Get rid of this code-repitition
 		position: o.position
 		radius: o.radius
 		color: o.color
 		quality: mathu.imax(mathu.imin(o.radius / 5, 10), 30)
 	}
-	dump(item.position)
-	// assert item.position == o.position
 	return item
 }
 
 fn (mut o CircleFollowMouse) update(delta i64) {
-	dump(o.app.get_mouse_pos())
 	o.position = o.app.get_mouse_pos()
-	dump(o.position)
-	dump(o.app.get_mouse_pos())
 }
 
 [console]
 fn main() {
-	println('Working')
 	ratio := ve.Vector2{4, 3}
 	scale := 120
 	mut app := ve.create_app(
