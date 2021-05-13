@@ -27,30 +27,33 @@ pub struct DrawPolygon {
 [heap]
 pub struct Circle {
 mut:
-	app      &App = 0
-	position Vector2
-	radius   int
-	color    gx.Color
+	app        &App    = 0
+	last_state Command = zero_cmd
+	position   Vector2
+	radius     int
+	color      gx.Color
 }
 
 [heap]
 pub struct Rectangle {
 mut:
-	app      &App = 0
-	position Vector2
-	width    int
-	height   int
-	color    gx.Color
+	app        &App    = 0
+	last_state Command = zero_cmd
+	position   Vector2
+	width      int
+	height     int
+	color      gx.Color
 }
 
 [heap]
 pub struct Polygon {
 	relative bool = true
 mut:
-	app      &App = 0
-	position Vector2
-	points   []Vector2
-	color    gx.Color
+	app        &App    = 0
+	last_state Command = zero_cmd
+	position   Vector2
+	points     []Vector2
+	color      gx.Color
 }
 
 fn (d DrawCircle) draw(mut ctx gg.Context) {
@@ -76,7 +79,7 @@ fn (o Circle) queue_draw(ratio f32) &Command {
 	}
 }
 
-fn (mut o Circle) update(delta i64) {
+fn (mut o Circle) update(delta f32) {
 }
 
 fn (o Rectangle) queue_draw(ratio f32) &Command {
@@ -88,7 +91,7 @@ fn (o Rectangle) queue_draw(ratio f32) &Command {
 	}
 }
 
-fn (mut o Rectangle) update(delta i64) {
+fn (mut o Rectangle) update(delta f32) {
 }
 
 fn (o Polygon) queue_draw(ratio f32) &Command {
@@ -103,5 +106,5 @@ fn (o Polygon) queue_draw(ratio f32) &Command {
 	}
 }
 
-fn (mut o Polygon) update(delta i64) {
+fn (mut o Polygon) update(delta f32) {
 }

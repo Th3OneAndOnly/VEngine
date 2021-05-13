@@ -5,6 +5,7 @@ import gx
 import time
 
 const (
+	zero_cmd      = ZeroCommand{}
 	// Milliseconds per update call. Doesn't exactly mean the update function is called this often, but it is called AT MOST this often, multiple times before rendering. Should obviously be larger than max_frame_wait_time
 	ms_per_update = 60
 	// Debug. 'all' is used for everything, so if debug is on it will always run. Anything else is complier flags. This is so that when I/someone is working on AI or smth I don't need to see the gameloop debug messages.
@@ -12,13 +13,15 @@ const (
 )
 
 [heap]
-struct App {
+pub struct App {
 mut:
-	gg        &gg.Context = 0
-	cmds      []Command
-	counter   int
-	mouse_pos Vector2
-	objects   []GameObject
+	gg          &gg.Context = 0
+	cmds        []Command
+	last_frame  []Command
+	counter     int
+	mouse_pos   Vector2
+	screen_size Vector2
+	objects     []GameObject
 }
 
 pub struct AppConfig {
@@ -33,6 +36,10 @@ pub fn (a &App) get_mouse_pos() Vector2 {
 	return a.mouse_pos
 }
 
+pub fn (a &App) get_screen_size() Vector2 {
+	return a.screen_size
+}
+
 pub fn (mut a App) add_object(mut obj GameObject) {
 	obj.app = &a
 	a.objects << *obj // Thanks SO MUCH miccah. Can't believe it was this simple.
@@ -44,7 +51,9 @@ pub fn (mut app App) begin() {
 }
 
 pub fn create_app(cfg AppConfig) &App {
-	mut app := &App{}
+	mut app := &App{
+		screen_size: Vector2{cfg.width, cfg.height}
+	}
 	app.gg = gg.new_context(
 		width: cfg.width
 		height: cfg.height
@@ -62,17 +71,14 @@ fn (mut a App) render(ratio f32) {
 	log('begin render: $ratio', 'gameloop')
 	a.cmds = []
 	for mut object in a.objects {
-		$if debug {
-			result := object.queue_draw(ratio)
-			log('draw object $result', 'gameloop')
-			a.cmds << *result
-		} $else {
-			a.cmds << *object.queue_draw(ratio)
-		}
+		result := object.queue_draw(ratio)
+		log('draw object $result', 'gameloop')
+		a.cmds << *result
+		object.last_state = *result
 	}
 }
 
-fn (mut a App) update(delta i64) {
+fn (mut a App) update(delta f32) {
 	for mut object in a.objects {
 		object.update(delta)
 	}
@@ -80,11 +86,11 @@ fn (mut a App) update(delta i64) {
 
 // Simple game loop. I've done, like, 3 of these in my time. Same as any other time I've done it (mostly) and works just as well.
 fn (mut a App) loop() {
-	mut start := i64(0)
-	mut elapsed := i64(0)
-	mut lag := i64(0)
+	mut start := f32(0)
+	mut elapsed := f32(0)
+	mut lag := f32(0)
 	for {
-		start = time.ticks()
+		start = f32(time.ticks())
 		lag += elapsed
 
 		for lag >= vengine.ms_per_update {
@@ -98,7 +104,7 @@ fn (mut a App) loop() {
 		}
 
 		a.render(f32(lag / vengine.ms_per_update))
-		elapsed = time.ticks() - start
+		elapsed = f32(time.ticks()) - start
 	}
 }
 
@@ -118,7 +124,15 @@ fn frame(mut app App) {
 		cmd.draw(mut app.gg)
 	}
 
+	if app.cmds.len == 0 && app.last_frame.len > 0 {
+		for cmd in app.last_frame {
+			cmd.draw(mut app.gg)
+		}
+	}
+	// Avoid blank frames at all costs
+
 	app.gg.end()
+	app.last_frame = app.cmds
 }
 
 [console; if debug]
