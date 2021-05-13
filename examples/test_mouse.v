@@ -22,7 +22,7 @@ fn (o &CircleFollowMouse) queue_draw(ratio f32) ve.Command {
 		radius: o.radius
 		color: o.color
 		quality: mathu.imax(mathu.imin(o.radius / 5, 10), 30)
-	} // FIXME: Struct corruption
+	}
 }
 
 fn (mut o CircleFollowMouse) update(delta i64) {
@@ -46,7 +46,7 @@ fn main() {
 		height: int(scale * ratio.y)
 		title: 'Mouse App'
 	)
-	app.add_object(mut ve.Circle{
+	app.add_object(mut CircleFollowMouse{
 		position: ve.Vector2{0, 0}
 		radius: 20
 		color: gx.blue

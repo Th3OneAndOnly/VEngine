@@ -23,7 +23,7 @@ mut:
 
 pub fn (mut a App) add_object(mut obj GameObject) {
 	obj.app = &a
-	a.objects << obj
+	a.objects << *obj // Thanks SO MUCH miccah. Can't believe it was this simple.
 }
 
 pub fn (a &App) get_mouse_pos() Vector2 {

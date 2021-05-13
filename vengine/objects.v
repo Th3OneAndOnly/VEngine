@@ -65,9 +65,6 @@ mut:
 }
 
 pub fn (o Circle) queue_draw(ratio f32) Command {
-	assert o.position == Vector2{0, 0}
-	assert o.radius == 20
-	assert o.color == gx.blue
 	return DrawCircle{
 		position: o.position
 		radius: o.radius
@@ -79,9 +76,6 @@ pub fn (o Circle) queue_draw(ratio f32) Command {
 }
 
 fn (mut o Circle) update(delta i64) {
-	assert o.position == Vector2{0, 0}
-	assert o.radius == 20
-	assert o.color == gx.blue
 }
 
 pub fn (o Rectangle) queue_draw(ratio f32) Command {
