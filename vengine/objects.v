@@ -5,6 +5,7 @@ import gg
 import math.util as mathu
 
 pub struct DrawCircle {
+pub:
 	position Vector2
 	radius   int
 	color    gx.Color
@@ -64,8 +65,8 @@ mut:
 	color    gx.Color
 }
 
-pub fn (o Circle) queue_draw(ratio f32) Command {
-	return DrawCircle{
+pub fn (o Circle) queue_draw(ratio f32) &Command {
+	return &DrawCircle{
 		position: o.position
 		radius: o.radius
 		color: o.color
@@ -78,8 +79,8 @@ pub fn (o Circle) queue_draw(ratio f32) Command {
 fn (mut o Circle) update(delta i64) {
 }
 
-pub fn (o Rectangle) queue_draw(ratio f32) Command {
-	return DrawRectangle{
+pub fn (o Rectangle) queue_draw(ratio f32) &Command {
+	return &DrawRectangle{
 		position: o.position
 		width: o.width
 		height: o.height
@@ -90,13 +91,13 @@ pub fn (o Rectangle) queue_draw(ratio f32) Command {
 fn (mut o Rectangle) update(delta i64) {
 }
 
-pub fn (o Polygon) queue_draw(ratio f32) Command {
+pub fn (o Polygon) queue_draw(ratio f32) &Command {
 	mut points := []f32{cap: 2 * o.points.len}
 	offset := if o.relative { o.position } else { Vector2{0, 0} }
 	for vec in o.points {
 		points << [vec.x + offset.x, vec.y + offset.y]
 	}
-	return DrawPolygon{
+	return &DrawPolygon{
 		points: points
 		color: o.color
 	}

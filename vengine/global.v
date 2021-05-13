@@ -72,20 +72,18 @@ pub fn (mut app App) begin() {
 fn (mut a App) render(ratio f32) {
 	a.cmds = []
 	for mut object in a.objects {
-		log('We render object')
 		$if debug {
-			result := dump(object.queue_draw(ratio))
-			// log('draw object $result')
-			a.cmds << result
+			result := object.queue_draw(ratio)
+			log('draw object $result')
+			a.cmds << *result
 		} $else {
-			a.cmds << object.queue_draw(ratio)
+			a.cmds << *object.queue_draw(ratio)
 		}
 	}
 }
 
 fn (mut a App) update(delta i64) {
 	for mut object in a.objects {
-		log('update')
 		object.update(delta)
 	}
 }
