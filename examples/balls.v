@@ -1,5 +1,5 @@
 import gx
-import vengine { App, Command, DrawCircle, Vector2, create_app, get_last_state, null_cmd, num2vec }
+import vengine { App, Command, DrawCircle, Vector2, create_app, null_cmd, num2vec }
 import math.util as mathu
 import rand
 
@@ -16,12 +16,13 @@ mut:
 }
 
 fn (o Ball) queue_draw(ratio f32) &Command {
-	mut old_position := o.position
-	if state := get_last_state(o) {
-		if state is vengine.DrawCircle {
-			old_position = state.position
-		}
-	}
+	// Right now continous makes for odd, regular slow-downs, so I'll stick with discrete.
+	mut old_position := o.position - o.velocity // subtracting velocity makes it discrete
+	// if state := get_last_state(o) {  // using the previous state makes it continuous (maybe it should be the next state.)
+	// 	if state is vengine.DrawCircle {
+	// 		old_position = state.position
+	// 	}
+	// }
 	item := &DrawCircle{
 		position: old_position.interpolate(o.position, ratio)
 		radius: o.radius
@@ -49,7 +50,7 @@ fn (mut o Ball) update(delta f32) {
 [console]
 fn main() {
 	ratio := Vector2{4, 3}
-	scale := 120
+	scale := 240
 	width := int(scale * ratio.x)
 	height := int(scale * ratio.y)
 	mut app := create_app(
@@ -57,10 +58,11 @@ fn main() {
 		height: height
 		title: 'Mouse App'
 	)
-	for _ in 0 .. 10 {
+	for _ in 0 .. 100 {
 		mut new_ball := Ball{
 			position: Vector2{rand.int_in_range(0, width), rand.int_in_range(0, height)}
-			velocity: Vector2{0.25, 0.25}
+			velocity: Vector2{0.5 * rand.f32_in_range(-1.0, 1.0), 0.5 * rand.f32_in_range(-1.0,
+				1.0)}
 			radius: 10
 			color: gx.Color{
 				r: byte(rand.int_in_range(0, 255))
